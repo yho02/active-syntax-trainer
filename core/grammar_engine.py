@@ -1,4 +1,9 @@
-def get_step(step):
-    return #retrieve step from file
+import json
 
-def get_level()
+cirriculum_file = json.load(open("data/grammar_profile.json"))
+def get_next_level(level):
+    return curriculum_file.key() #retrieve next level from file 
+def get_step_content(step):
+    return curriculum_file[step] #retrieve content from file
+def get_total_steps(level):
+    return #retrieve total steps for a level from file
