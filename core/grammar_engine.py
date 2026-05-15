@@ -1,9 +1,17 @@
 import json
-
-cirriculum_file = json.load(open("data/grammar_profile.json"))
+all_levels = ["A1", "A2", "B1", "B2"]
+with open("data/grammar_profile.json") as f:
+    curriculum = json.load(f)
 def get_next_level(level):
-    return curriculum_file.key() #retrieve next level from file 
+    if level in all_levels:
+        return all_levels[all_levels.index(level) + 1] if all_levels.index(level) + 1 < len(all_levels) else None
+    return None
 def get_step_content(step):
-    return curriculum_file[step] #retrieve content from file
+    return next((d for d in curriculum if d['step'] == step), None)
 def get_total_steps(level):
-    return #retrieve total steps for a level from file
+    return len([d for d in curriculum if d['cefr_level'] == level])
+
+
+print(get_next_level("A1"))
+print(get_step_content(1))
+print(get_total_steps("A1"))
