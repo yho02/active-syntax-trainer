@@ -10,8 +10,3 @@ def get_step_content(step):
     return next((d for d in curriculum if d['step'] == step), None)
 def get_total_steps(level):
     return len([d for d in curriculum if d['cefr_level'] == level])
-
-
-print(get_next_level("A1"))
-print(get_step_content(1))
-print(get_total_steps("A1"))
