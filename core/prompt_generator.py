@@ -1,9 +1,9 @@
 from core import grammar_engine
 from services import ai_service
 
-def generate_prompt(step):
+def generate_prompt(step, level):
     # Get the content for the current step from the grammar engine
-    content = grammar_engine.get_step_content(step)
+    content = grammar_engine.get_step_content(step, level)
     guide = content['guideword'] 
     learning_objective = content['learning_objective']
     example_sentence = content['example_sentence'] 
