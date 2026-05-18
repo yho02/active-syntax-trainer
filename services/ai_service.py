@@ -82,7 +82,7 @@ client=genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def call_agent(prompt):
     response=client.models.generate_content(
-        model="gemini-2.5-flash-lite", contents = prompt,
+        model="gemini-2.0-flash", contents = prompt,
         config=types.GenerateContentConfig(
             system_instruction=TUTOR_SYSTEM_PROMPT
         )
@@ -92,7 +92,7 @@ def call_agent(prompt):
 
 def call_evaluator(prompt):
     response=client.models.generate_content(
-        model="gemini-2.5-flash-lite", contents = prompt,
+        model="gemini-2.0-flash", contents = prompt,
         config=types.GenerateContentConfig(
             system_instruction=EVALUATOR_SYSTEM_PROMPT
         )
