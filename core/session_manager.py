@@ -23,20 +23,15 @@ def greet():
 def ini_question():
     #generate first question when student first arrives or refreshes page
     st.session_state.current_prompt = prompt_generator.generate_prompt(st.session_state.current_step, st.session_state.current_level)
-    st.session_state.conversation_history.append({
-        "prompt": st.session_state.current_prompt,
-        "answer": None
-    })
     return f"Here's your question for this step: {st.session_state.current_prompt}"
 
 def handle_answer(answer):
-    print(f"current_prompt when saving: {st.session_state.current_prompt[:50]}")
-    #save answer to history
     st.session_state.conversation_history.append({
         "prompt": st.session_state.current_prompt,
         "answer": answer
     })
-    #evaluate and get feedback
+
+    #evaluate and get feedbackt
     evaluation = evaluator.evaluate(st.session_state.conversation_history[-1]['answer'], st.session_state.conversation_history[-1]['prompt'])
     feedback = evaluation.get('feedback')
     score = evaluation.get('score')
@@ -54,5 +49,5 @@ def handle_answer(answer):
         st.session_state.current_prompt = next_prompt
         return f"{feedback}. Let's move on to the next question: {next_prompt}"
     elif score <= 2:
-        return st.session_state.conversation_history[-1]['feedback']
+        return feedback
     print(f"Score: {score}, Feedback: {feedback}")
