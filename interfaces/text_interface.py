@@ -12,9 +12,8 @@ for entry in st.session_state.conversation_history:
         st.write(f"**Question:** {entry['prompt']}")
     with st.chat_message("user"):
         st.write(f"**Your answer:** {entry['answer']}")
-    if 'feedback' in entry:
-        with st.chat_message("assistant"):
-            st.write(f"**Feedback:** {entry['feedback']['feedback']} (Score: {entry['feedback']['score']})")
+    with st.chat_message("assistant"):
+        st.write(f"**Feedback:** {entry['feedback']} (Score: {entry['score']})")
     st.markdown("---")
 
 

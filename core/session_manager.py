@@ -8,6 +8,7 @@ def init_session_state():
         'student_id': None,
         'current_prompt': None,
         'conversation_history': []
+
     }
 
     for key, value in defaults.items():
@@ -26,28 +27,32 @@ def ini_question():
     return f"Here's your question for this step: {st.session_state.current_prompt}"
 
 def handle_answer(answer):
-    st.session_state.conversation_history.append({
-        "prompt": st.session_state.current_prompt,
-        "answer": answer
-    })
-
-    #evaluate and get feedbackt
-    evaluation = evaluator.evaluate(st.session_state.conversation_history[-1]['answer'], st.session_state.conversation_history[-1]['prompt'])
+    # 1. Evaluate immediately using the variables already available
+    evaluation = evaluator.evaluate(answer, st.session_state.current_prompt)
     feedback = evaluation.get('feedback')
     score = evaluation.get('score')
-    st.session_state.conversation_history[-1]['feedback'] = feedback
-
-    #generate feedback or next question based on score
+    
+    # 2. Save the COMPLETE interaction to history just for the UI to read later
+    st.session_state.conversation_history.append({
+        "prompt": st.session_state.current_prompt,
+        "answer": answer,
+        "feedback": feedback,
+        "score": score
+    })
+    
+    # 3. Decide what to do next based on the score
     if score == 3:
         st.session_state.current_step, st.session_state.current_level = level_tracker.track_level(
-        st.session_state.current_step,
-        st.session_state.current_level,
-        score
-        )   
-        #combine message and next question into one response to avoid multiple messages in a row
+            st.session_state.current_step,
+            st.session_state.current_level,
+            score
+        )           
+        
+        # Generate the next question
         next_prompt = prompt_generator.generate_prompt(st.session_state.current_step, st.session_state.current_level)
         st.session_state.current_prompt = next_prompt
+        
         return f"{feedback}. Let's move on to the next question: {next_prompt}"
+        
     elif score <= 2:
         return feedback
-    print(f"Score: {score}, Feedback: {feedback}")
