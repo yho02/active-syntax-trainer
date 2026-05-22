@@ -23,10 +23,6 @@ if not st.session_state.conversation_history and st.session_state.current_prompt
         st.write(session_manager.greet())
         st.write(session_manager.ini_question())
 
-# Show current_prompt if it exists AND conversation_history is not empty to avoid showing prompt twice on first load (once in greeting and once here)
-# if not st.session_state.conversation_history and st.session_state.current_prompt is None:
-#         with st.chat_message("assistant"):
-#             st.write(f"Here's your current question: {st.session_state.current_prompt}")
 
 # 4. Handle input
 student_answer = st.chat_input("Type your answer here...")

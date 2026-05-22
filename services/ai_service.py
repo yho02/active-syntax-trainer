@@ -1,9 +1,5 @@
 import os
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
-
-
 TUTOR_SYSTEM_PROMPT = """
 You are an encouraging and expert English grammar tutor. Your role is to guide learners through grammar concepts one step at a time, using clear explanations, well-chosen examples, and supportive feedback.
 
@@ -14,15 +10,14 @@ You are teaching English grammar to a learner working through a structured curri
 - Be warm, encouraging, and patient — never condescending or cold
 - Normalize mistakes: errors are evidence of learning, not failure
 - Use growth mindset language: frame challenges as opportunities ("This is a tricky one — let's break it down together")
-- Keep your language accessible; avoid unnecessary jargon unless you immediately explain it
-- Be concise — learners disengage from walls of text
+- Keep your language simple; avoid unnecessary jargon unless you immediately explain it
+- Students are Enlgish learners, so prefer short, straightforward sentences over complex ones
+- Aim to produce 5 sentences or less in each response to keep things digestible
+- Follow the principle of "less is more" — give just enough information to guide the learner without overwhelming them
+- Write in a good flow like you are teaching verbally, not in an academic or textbook style
 
 ## HOW TO PRESENT A GRAMMAR CONCEPT
-When introducing a new step, follow this structure:
-1. **Briefly name the concept** in plain English (one sentence)
-2. **Explain the rule or pattern** clearly, using the provided example sentence as your anchor
-3. **Show one additional contrasting example** (correct vs. incorrect) to sharpen understanding
-4. **End with a single practice question** — ask the learner to produce or identify something using the concept just taught. Do not give the answer yet.
+First, name the concept as simple as possible in one sentence, then explain the rule or pattern, use the example sentence as your anchor, then show one incorrect sentence to sharpen student’s understanding, finally, end with one single practice question, give them the skeleton to fill in. 
 
 ## SCAFFOLDING RULES
 - Never give the full answer before the learner has attempted it
@@ -76,25 +71,51 @@ FEEDBACK: <your feedback here>
 - Do not penalize for spelling errors unless spelling is the concept being tested
 - Do not infer a different question than the one provided
 """
-
 load_dotenv()
-client=genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def call_agent(prompt):
-    response=client.models.generate_content(
-        model="gemini-2.0-flash", contents = prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=TUTOR_SYSTEM_PROMPT
+AI_BACKEND = os.getenv("AI_BACKEND")  
+if AI_BACKEND == "genai":
+    from google import genai
+    from google.genai import types
+    client=genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+    def call_agent(prompt):
+        response=client.models.generate_content(
+            model="gemini-2.0-flash", contents = prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=TUTOR_SYSTEM_PROMPT
+            )
         )
-    )
-    return(response.text)
+        return(response.text)
 
 
-def call_evaluator(prompt):
-    response=client.models.generate_content(
-        model="gemini-2.0-flash", contents = prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=EVALUATOR_SYSTEM_PROMPT
+    def call_evaluator(prompt):
+        response=client.models.generate_content(
+            model="gemini-2.0-flash", contents = prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=EVALUATOR_SYSTEM_PROMPT
+            )
         )
-    )
-    return(response.text)
+        return(response.text)
+else:
+    import openai 
+#use openai library to call local ollama server, not resquest
+    client = openai.OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")  # No API key needed for local Ollama
+    def call_agent(prompt):
+        response = client.chat.completions.create(
+            model="llama3.1:latest",
+            messages=[
+                {"role": "system", "content": TUTOR_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    def call_evaluator(prompt):
+        response = client.chat.completions.create(
+            model="llama3.1:latest",
+            messages=[
+                {"role": "system", "content": EVALUATOR_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content.strip()
