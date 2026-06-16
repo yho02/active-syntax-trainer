@@ -12,14 +12,14 @@ client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def sign_up(email, password,name):
     try:
-        response = client.auth.sign_up(email=email, password=password, options={"data": {"name": name}})
+        response = client.auth.sign_up({"email": email, "password": password, "options": {"data": {"name": name}}})
         return response
     except Exception as e:
         return {"error": str(e)}
 
 def sign_in_with_password(email, password):
     try:
-        response = client.auth.sign_in_with_password(email=email, password=password)
+        response = client.auth.sign_in_with_password({"email": email, "password": password})
         return response
     except Exception as e:
         return {"error": str(e)}

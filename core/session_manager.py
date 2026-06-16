@@ -1,5 +1,6 @@
 import streamlit as st
 from core import prompt_generator, level_tracker, evaluator
+from services import supabase_service
 
 def init_session_state():
     defaults = {
@@ -14,6 +15,7 @@ def init_session_state():
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
 
 def greet():    
     if st.session_state.current_step == 1:
@@ -51,8 +53,61 @@ def handle_answer(answer):
         # Generate the next question
         next_prompt = prompt_generator.generate_prompt(st.session_state.current_step, st.session_state.current_level)
         st.session_state.current_prompt = next_prompt
-        
-        return f"{feedback}. Let's move on to the next question: {next_prompt}"
+
+        response = f"{feedback}. Let's move on to the next question: {next_prompt}"
         
     elif score <= 2:
-        return feedback
+        response = feedback
+    
+    update_response = supabase_service.update_progress(
+        st.session_state.student_id,
+        st.session_state.current_level,
+        st.session_state.current_step,
+        st.session_state.current_prompt
+    )
+
+    return response
+
+def sign_in(email, password):
+    # take email and password from UI, validate with Supabase
+    # if valid, load student's progress in session state
+    response = supabase_service.sign_in_with_password(email, password)
+    if 'error' in response:
+        return f"Sign in failed: {response['error']}"
+    else:
+        st.session_state.student_id = response.user.id
+        progress_response = supabase_service.get_progress(st.session_state.student_id)
+        if 'error' in progress_response:
+            return f"Failed to load progress: {progress_response['error']}"
+        else:
+            progress_data = progress_response.data
+            if progress_data:
+                st.session_state.current_level = progress_data[0]['current_level']
+                st.session_state.current_step = progress_data[0]['current_step']
+                st.session_state.current_prompt = progress_data[0]['current_prompt']
+            else:
+                # If no progress exists, create a new entry
+                supabase_service.create_progress(st.session_state.student_id)
+            return "Sign in successful! Progress loaded."
+
+def sign_up(email, password, name):
+    # take email, password, and name from UI, create account with Supabase
+    response = supabase_service.sign_up(email, password, name)
+    if 'error' in response:
+        return f"Sign up failed: {response['error']}"
+    else:
+        # create student progress entry in database with default values (A1, step 1, empty prompt)
+        st.session_state.student_id = response.user.id
+
+        create_response = supabase_service.create_progress(st.session_state.student_id)
+        if 'error' in create_response:
+            return f"Sign up failed: could not create progress record: {create_response['error']}"
+
+        progress = supabase_service.get_progress(st.session_state.student_id)
+        if 'error' in progress:
+            return f"Sign up failed: could not load progress: {progress['error']}"
+
+        st.session_state.current_level = progress.data[0]['current_level']
+        st.session_state.current_step = progress.data[0]['current_step']
+        st.session_state.current_prompt = progress.data[0]['current_prompt']
+        return "Sign up successful! Let's start your English journey."
