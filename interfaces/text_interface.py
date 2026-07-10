@@ -1,42 +1,28 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 from core import session_manager
+from core import grammar_engine
 
-session_manager.init_session_state()
+def show():
+    with st.sidebar:
+        st.header("Your Progress")
+        st.metric(label = "Current Level", value = st.session_state.current_level)
+        total_steps = grammar_engine.get_total_steps(st.session_state.current_level)
 
-# 1. validate sign in or sign up, use st.form instead of individual input and button to avoid multiple calls to supabase when user is typing in the input fields. Only call supabase when the form is submitted.
-if st.session_state.student_id is None:
-    with st.form("auth_form"):
-        st.write("Please sign in or sign up to continue.")
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
-        name = st.text_input("Name (for sign up)")
-        col1, col2 = st.columns(2)
-        with col1:
-            sign_in_button = st.form_submit_button("Sign In")
-        with col2:
-            sign_up_button = st.form_submit_button("Sign Up")
+        st.write(f"Step {st.session_state.current_step} out of {total_steps}")
 
-    if sign_in_button: 
-        response = session_manager.sign_in(email, password)
-        if "successful" in response:
-            st.rerun()  # Refresh the page to load progress and display the main interface
-        else:
-            st.error(response)
+        progress_ratio = st.session_state.current_step / total_steps
+        st.progress(progress_ratio)
+        
+        st.divider()
 
-    if sign_up_button:
-        response = session_manager.sign_up(email, password, name)
-        if "successful" in response:
-            st.rerun()  # Refresh the page to load progress and display the main interface
-        else:
-            st.error(response)
-else:
-    # 2. Handle input (Capture it first!)
+        # sign out
+        if st.button("Sign Out"):
+            session_manager.sign_out()
+            st.rerun()
+
     student_answer = st.chat_input("Type your answer here...")
 
-    # 3. Display History (The Past)
+    # 2. Display History (The Past)
     for entry in st.session_state.conversation_history:
         with st.chat_message("assistant"):
             st.write(f"**Question:** {entry['prompt']}")

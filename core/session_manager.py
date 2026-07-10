@@ -8,8 +8,8 @@ def init_session_state():
         'current_level': "A1",
         'student_id': None,
         'current_prompt': None,
-        'conversation_history': []
-
+        'conversation_history': [],
+        'attempt_count': 0
     }
 
     for key, value in defaults.items():
@@ -30,7 +30,11 @@ def ini_question():
 
 def handle_answer(answer):
     # 1. Evaluate immediately using the variables already available
-    evaluation = evaluator.evaluate(answer, st.session_state.current_prompt)
+    evaluation = evaluator.evaluate(
+        answer, 
+        st.session_state.current_prompt, 
+        st.session_state.attempt_count
+    )
     feedback = evaluation.get('feedback')
     score = evaluation.get('score')
     
@@ -44,12 +48,12 @@ def handle_answer(answer):
     
     # 3. Decide what to do next based on the score
     if score == 3:
+        st.session_state.attempt_count = 0
         st.session_state.current_step, st.session_state.current_level = level_tracker.track_level(
             st.session_state.current_step,
             st.session_state.current_level,
             score
-        )           
-        
+        )                  
         # Generate the next question
         next_prompt = prompt_generator.generate_prompt(st.session_state.current_step, st.session_state.current_level)
         st.session_state.current_prompt = next_prompt
@@ -57,6 +61,7 @@ def handle_answer(answer):
         response = f"{feedback}. Let's move on to the next question: {next_prompt}"
         
     elif score <= 2:
+        st.session_state.attempt_count += 1
         response = feedback
     
     update_response = supabase_service.update_progress(
@@ -111,3 +116,7 @@ def sign_up(email, password, name):
         st.session_state.current_step = progress.data[0]['current_step']
         st.session_state.current_prompt = progress.data[0]['current_prompt']
         return "Sign up successful! Let's start your English journey."
+
+def sign_out():
+    supabase_service.sign_out()
+    st.session_state.clear()

@@ -51,3 +51,10 @@ def update_progress(student_id, current_level, current_step, current_prompt):
         return response
     except Exception as e:
         return {"error": str(e)}
+
+def sign_out():
+    try:
+        response = client.auth.sign_out()
+        return response
+    except Exception as e:
+        return {"error": str(e)}    

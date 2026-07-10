@@ -1,7 +1,21 @@
 # evaluator.py
 from services import ai_service
 
-def evaluate(student_answer: str, original_prompt: str) -> dict:
+def evaluate(student_answer: str, original_prompt: str, attempt_count: int = 0) -> dict:
+    if attempt_count == 0:
+        hint_instruction = ""
+    elif attempt_count == 1:
+        hint_instruction = ("\n\nThe student has already attempted this once. "
+            "Add a brief structural hint (e.g. word order, tense form) "
+            "to guide them without giving away the answer."
+        )
+    else:
+        hint_instruction =(
+            "\n\nThe student has struggled with this multiple times. "
+            "Provide a near-complete example sentence with one key word "
+            "replaced by a blank (___) to scaffold their next attempt."
+        )
+    
     eval_prompt = (
         f"A learner was given this grammar exercise:\n"
         f"\"{original_prompt}\"\n\n"
@@ -18,6 +32,7 @@ def evaluate(student_answer: str, original_prompt: str) -> dict:
         f"Give honest, specific feedback. If there is an error, explain it clearly "
         f"and briefly suggest how to fix it. Do not give the corrected answer outright "
         f"unless the score is 0 — instead, guide the learner toward it."
+        f"{hint_instruction}"
     )
 
     raw = ai_service.call_evaluator(eval_prompt)

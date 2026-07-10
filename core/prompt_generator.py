@@ -9,12 +9,9 @@ def generate_prompt(step, level):
     example_sentence = content['example_sentence'] 
 
     user_prompt = (
-        f"Teach the following grammar concept to the learner.\n\n"
-        f"Concept: {guide}\n"
-        f"Learning objective: {learning_objective}\n"
-        f"Example sentence to use: \"{example_sentence}\"\n\n"
-        f"Follow your teaching structure: introduce the concept, explain the rule "
-        f"using the example, show a contrasting example, then ask one practice question."
+        f"Grammar concept: {guide}\n"
+        f"Example: \"{example_sentence}\"\n\n"
+        f"Show the example, then ask the student to make a similar sentence."
         ) 
 
     # Call the AI service to generate a response based on the step content
